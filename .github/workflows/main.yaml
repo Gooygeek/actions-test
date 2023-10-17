@@ -7,4 +7,8 @@ jobs:
       - name: my-step
         run: echo "Hello, World!"
       - name: my-step2
-        run: echo "Hello, Cruel World!"
+        run:  |
+          for i in {1..50}; do
+            echo "Hello, Cruel World ${i}!"
+            sleep 1
+          done
