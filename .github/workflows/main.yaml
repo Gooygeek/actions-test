@@ -6,6 +6,13 @@ jobs:
     steps:
       - name: my-step
         run: echo "Hello, World!"
+      - name: print envs
+        run: |
+          echo "Local Envs"
+          env | sort
+          echo "----------"
+          echo "pre-job envs"
+          cat /home/runner/pre-job-envs.txt
       - name: my-step2
         run:  |
           for i in {1..100}; do
