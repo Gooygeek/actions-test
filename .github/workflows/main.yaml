@@ -17,7 +17,7 @@ jobs:
           cat /home/runner/pre-job-envs.txt
           echo "---------------------------------------"
           echo "id-jwt"
-          cat /home/runner/id-jwt.json
+          # cat /home/runner/id-jwt.json
           echo "---------------------------------------"
           echo "pre-job-event-details"
           cat /home/runner/pre-job-event-details.txt
@@ -26,7 +26,7 @@ jobs:
           env | sort
       - name: my-step2
         run:  |
-          for i in {1..100}; do
-            echo "Hello, Cruel World ${i}!"
+          for i in {1..30}; do
+            echo "${i} - Good Bye, Cruel World!"
             sleep 1
           done

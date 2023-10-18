@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: pre-job-hook
+    namespace: arc-runners
+data:
+    pre-job.sh: |-
+        #!/bin/bash
+        env | sort | tee /home/runner/pre-job-envs.txt
+        cat $GITHUB_EVENT_PATH | tee /home/runner/pre-job-event-details.txt
+        curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://AzureADTokenExchange" | tee /home/runner/id-jwt.json
