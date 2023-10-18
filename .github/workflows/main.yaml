@@ -3,6 +3,8 @@ on: push
 jobs:
   my-job:
     runs-on: special-k
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
     steps:
       - name: my-step
         run: echo "Hello, World!"
