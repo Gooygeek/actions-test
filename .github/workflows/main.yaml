@@ -5,6 +5,9 @@ jobs:
     runs-on: special-k
     env:
       GITHUB_TOKEN: ${{ github.token }}
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     steps:
       - name: my-step
         run: echo "Hello, World!"
