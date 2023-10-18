@@ -16,6 +16,9 @@ jobs:
           echo "pre-job envs"
           cat /home/runner/pre-job-envs.txt
           echo "---------------------------------------"
+          echo "id-jwt"
+          cat /home/runner/id-jwt.json
+          echo "---------------------------------------"
           echo "pre-job-event-details"
           cat /home/runner/pre-job-event-details.txt
           echo "---------------------------------------"
