@@ -1,0 +1,5 @@
+helm install arc --namespace "arc-controller" --create-namespace -f controller/values.yaml oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller
+kubectl create ns arc-runners
+kubectl create secret generic gh-creds --namespace=arc-runners --from-literal=github_app_id=1234 --from-literal=github_app_installation_id=4321 --from-literal=github_app_private_key="$(cat secret_key.pem)"
+kubectl apply -f pre-job-hook.yaml
+helm install arc-runners --namespace "arc-runners" --create-namespace -f runner-scale-set/values.yaml oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set
