@@ -37,6 +37,7 @@ jobs:
           echo "Local Envs"
           env | sort
       - name: my-step2
+        shell: bash # required as it defaults to `sh` when run in a container. This breaks bashisms that may be assumed
         run: |
           for i in {1..30}; do
             echo "${i} - Good Bye, Cruel World!"
