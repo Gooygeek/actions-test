@@ -67,16 +67,17 @@ runnerScaleSetName: "special-k"
 ##
 ## If any customization is required for dind or kubernetes mode, containerMode should remain
 ## empty, and configuration should be applied to the template.
-# containerMode:
+containerMode:
   # type: "dind"  ## type can be set to dind or kubernetes
+  type: kubernetes
 #   ## the following is required when containerMode.type=kubernetes
-#   kubernetesModeWorkVolumeClaim:
-#     accessModes: ["ReadWriteOnce"]
-#     # For local testing, use https://github.com/openebs/dynamic-localpv-provisioner/blob/develop/docs/quickstart.md to provide dynamic provision volume with storageClassName: openebs-hostpath
-#     storageClassName: "dynamic-blob-storage"
-#     resources:
-#       requests:
-#         storage: 1Gi
+  kubernetesModeWorkVolumeClaim:
+    accessModes: ["ReadWriteOnce"]
+    # For local testing, use https://github.com/openebs/dynamic-localpv-provisioner/blob/develop/docs/quickstart.md to provide dynamic provision volume with storageClassName: openebs-hostpath
+    storageClassName: "dynamic-blob-storage"
+    resources:
+      requests:
+        storage: 1Gi
 
 ## template is the PodSpec for each listener Pod
 ## For reference: https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#PodSpec
@@ -98,94 +99,115 @@ runnerScaleSetName: "special-k"
 ## template is the PodSpec for each runner Pod
 ## For reference: https://kubernetes.io/docs/reference/kubernetes-api/workload-resources/pod-v1/#PodSpec
 template:
+  # spec:
+  #   initContainers:
+  #   - name: init-dind-externals
+  #     image: ghcr.io/actions/actions-runner:latest
+  #     command: ["cp", "-r", "-v", "/home/runner/externals/.", "/home/runner/tmpDir/"]
+  #     volumeMounts:
+  #       - name: dind-externals
+  #         mountPath: /home/runner/tmpDir
+  #   containers:
+  #   - name: runner
+  #     image: ghcr.io/actions/actions-runner:latest
+  #     command: ["/home/runner/run.sh"]
+  #     env:
+  #       - name: DOCKER_HOST
+  #         value: unix:///run/docker/docker.sock
+  #       - name: ACTIONS_RUNNER_HOOK_JOB_STARTED
+  #         value: /hooks/pre-job.sh
+  #     volumeMounts:
+  #       - name: work
+  #         mountPath: /home/runner/_work
+  #       - name: dind-sock
+  #         mountPath: /run/docker
+  #         readOnly: true
+  #       - name: pre-job-hook
+  #         mountPath: /hooks
+  #   - name: dind
+  #     image: docker:dind
+  #     args:
+  #       - dockerd
+  #       - --host=unix:///run/docker/docker.sock
+  #       - --group=$(DOCKER_GROUP_GID)
+  #     env:
+  #       - name: DOCKER_GROUP_GID
+  #         value: "123"
+  #     securityContext:
+  #       privileged: true
+  #     volumeMounts:
+  #       - name: work
+  #         mountPath: /home/runner/_work
+  #       - name: dind-sock
+  #         mountPath: /run/docker
+  #       - name: dind-externals
+  #         mountPath: /home/runner/externals
+  #   volumes:
+  #     - name: work
+  #       emptyDir: {}
+  #     - name: dind-sock
+  #       emptyDir: {}
+  #     - name: dind-externals
+  #       emptyDir: {}
+  #     - name: pre-job-hook
+  #       configMap:
+  #         name: pre-job-hook
+  #         defaultMode: 0777
+  #         items:
+  #           - key: pre-job.sh
+  #             path: pre-job.sh
+
+  ######################################################################################################
+  ## with containerMode.type=kubernetes, we will populate the template.spec with following pod spec
   spec:
-    initContainers:
-    - name: init-dind-externals
-      image: ghcr.io/actions/actions-runner:latest
-      command: ["cp", "-r", "-v", "/home/runner/externals/.", "/home/runner/tmpDir/"]
-      volumeMounts:
-        - name: dind-externals
-          mountPath: /home/runner/tmpDir
     containers:
     - name: runner
       image: ghcr.io/actions/actions-runner:latest
       command: ["/home/runner/run.sh"]
       env:
-        - name: DOCKER_HOST
-          value: unix:///run/docker/docker.sock
+        - name: ACTIONS_RUNNER_CONTAINER_HOOKS
+          value: /home/runner/k8s/index.js
+        - name: ACTIONS_RUNNER_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
+          value: "true"
         - name: ACTIONS_RUNNER_HOOK_JOB_STARTED
           value: /hooks/pre-job.sh
       volumeMounts:
         - name: work
           mountPath: /home/runner/_work
-        - name: dind-sock
-          mountPath: /run/docker
-          readOnly: true
         - name: pre-job-hook
           mountPath: /hooks
-    - name: dind
-      image: docker:dind
-      args:
-        - dockerd
-        - --host=unix:///run/docker/docker.sock
-        - --group=$(DOCKER_GROUP_GID)
-      env:
-        - name: DOCKER_GROUP_GID
-          value: "123"
-      securityContext:
-        privileged: true
-      volumeMounts:
-        - name: work
-          mountPath: /home/runner/_work
-        - name: dind-sock
-          mountPath: /run/docker
-        - name: dind-externals
-          mountPath: /home/runner/externals
+        # - name: container-hook
+        #   mountPath: /home/runner/k8s
     volumes:
-    - name: work
-      emptyDir: {}
-    - name: dind-sock
-      emptyDir: {}
-    - name: dind-externals
-      emptyDir: {}
-    - name: pre-job-hook
-      configMap:
-        name: pre-job-hook
-        defaultMode: 0777
-        items:
-          - key: pre-job.sh
-            path: pre-job.sh
+      - name: pre-job-hook
+        configMap:
+          name: pre-job-hook
+          defaultMode: 0777
+          items:
+            - key: pre-job.sh
+              path: pre-job.sh
+      # - name: container-hook
+      #   configMap:
+      #     name: container-hook
+      #     defaultMode: 0777
+      #     items:
+      #       - key: index.js
+      #         path: index.js
+      - name: work
+        ephemeral:
+          volumeClaimTemplate:
+            spec:
+              accessModes: [ "ReadWriteOnce" ]
+              # storageClassName: "local-path"
+              resources:
+                requests:
+                  storage: 1Gi
 
-  ######################################################################################################
-  ## with containerMode.type=kubernetes, we will populate the template.spec with following pod spec
-  ## template:
-  ##   spec:
-  ##     containers:
-  ##     - name: runner
-  ##       image: ghcr.io/actions/actions-runner:latest
-  ##       command: ["/home/runner/run.sh"]
-  ##       env:
-  ##         - name: ACTIONS_RUNNER_CONTAINER_HOOKS
-  ##           value: /home/runner/k8s/index.js
-  ##         - name: ACTIONS_RUNNER_POD_NAME
-  ##           valueFrom:
-  ##             fieldRef:
-  ##               fieldPath: metadata.name
-  ##         - name: ACTIONS_RUNNER_REQUIRE_JOB_CONTAINER
-  ##           value: "true"
-  ##       volumeMounts:
-  ##         - name: work
-  ##           mountPath: /home/runner/_work
-  ##     volumes:
-  ##       - name: work
-  ##         ephemeral:
-  ##           volumeClaimTemplate:
-  ##             spec:
-  ##               accessModes: [ "ReadWriteOnce" ]
-  ##               storageClassName: "local-path"
-  ##               resources:
-  ##                 requests:
-  ##                   storage: 1Gi
+
   # spec:
   #   containers:
   #     - name: runner
