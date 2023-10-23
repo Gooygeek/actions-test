@@ -175,6 +175,8 @@ template:
           value: "true"
         - name: ACTIONS_RUNNER_HOOK_JOB_STARTED
           value: /hooks/pre-job.sh
+        - name: ACTIONS_RUNNER_CONTAINER_HOOK_TEMPLATE
+          value: /home/runner/container-hook-extension-mod.yaml
       volumeMounts:
         - name: work
           mountPath: /home/runner/_work
@@ -182,6 +184,8 @@ template:
           mountPath: /hooks
         # - name: container-hook
         #   mountPath: /home/runner/k8s
+        - name: container-hook-extension
+          mountPath: /container-hooks
     volumes:
       - name: pre-job-hook
         configMap:
@@ -197,6 +201,13 @@ template:
       #     items:
       #       - key: index.js
       #         path: index.js
+      - name: container-hook-extension
+        configMap:
+          name: container-hook-extension
+          defaultMode: 0777
+          items:
+            - key: container-hook-extension.yaml
+              path: container-hook-extension.yaml
       - name: work
         ephemeral:
           volumeClaimTemplate:
