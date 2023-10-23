@@ -9,3 +9,14 @@ data:
         env | sort | tee /home/runner/pre-job-envs.txt
         cat $GITHUB_EVENT_PATH | tee /home/runner/pre-job-event-details.txt
         curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=api://AzureADTokenExchange" | tee /home/runner/id-jwt.json
+        cp /container-hooks/container-hook-extension.yaml /home/runner/container-hook-extension-mod.yaml
+        cat >> /home/runner/container-hook-extension-mod.yaml << EOF
+
+              resources:
+                requests:
+                  memory: "64Mi"
+                  cpu: "250m"
+                limits:
+                  memory: "128Mi"
+                  cpu: "500m"
+        EOF
