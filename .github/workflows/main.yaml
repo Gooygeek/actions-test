@@ -3,6 +3,8 @@ on: push
 jobs:
   my-job:
     runs-on: special-k
+    container:
+      image: ubuntu:22.04
     env:
       GITHUB_TOKEN: ${{ github.token }}
     permissions:
@@ -10,9 +12,11 @@ jobs:
       id-token: 'write'
     steps:
       - name: my-step
-        run: echo "Hello, World!"
+        run: |
+          echo "Hello, World!" | tee helloworld.txt
       - name: print envs
         run: |
+          cat helloworld.txt
           echo "pre-job envs"
           cat /home/runner/pre-job-envs.txt
           echo "---------------------------------------"
