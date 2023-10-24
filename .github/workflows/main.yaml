@@ -9,6 +9,7 @@ jobs:
       contents: 'read'
       id-token: 'write'
     steps:
+      - uses: actions/checkout@v4
       - name: my-step
         run: echo "Hello, World!"
       - name: print envs
@@ -24,6 +25,10 @@ jobs:
           echo "---------------------------------------"
           echo "Local Envs"
           env | sort
+      - name: build docker
+        run: |
+          docker build . -t testcontainer
+          docker run --rm -t testcontainer cat testfile
       - name: my-step2
         run:  |
           for i in {1..30}; do
