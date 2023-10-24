@@ -31,7 +31,13 @@ jobs:
           docker run --rm -t testcontainer cat testfile
       - name: my-step2
         run:  |
-          for i in {1..30}; do
+          for i in {1..10}; do
             echo "${i} - Good Bye, Cruel World!"
             sleep 1
           done
+      - name: run container step
+        uses: docker://ubuntu:18.04
+        with:
+          args: |
+            echo "Hello World"
+            echo "Goodbye Cruel World"
