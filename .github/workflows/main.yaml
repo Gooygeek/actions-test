@@ -38,6 +38,8 @@ jobs:
       - name: run container step
         uses: docker://ubuntu:18.04
         with:
-          args: |
-            echo "Hello World"
-            echo "Goodbye Cruel World"
+          entrypoint: /bin/bash
+          args: >
+            -c
+            "echo \"Hello World\";
+            echo \"Goodbye Cruel World\";"
